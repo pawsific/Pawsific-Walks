@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pawsific – Daily Walks</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green-dk: #1E4D38;
+    --green:    #2D6A4F;
+    --green-md: #52B788;
+    --green-lt: #D8EFE3;
+    --sky:      #F0F7F3;
+    --white:    #FFFFFF;
+    --ink:      #17211E;
+    --muted:    #6B7C76;
+    --border:   #CEE3D6;
+    --rover:    #D95F2B;
+    --rover-lt: #FDEEE7;
+    --rover-bd: #F5C4AB;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--sky);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── Login screen ── */
+  #login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 32px 20px;
+    text-align: center;
+  }
+
+  .paw-mark {
+    font-size: 48px;
+    margin-bottom: 20px;
+    line-height: 1;
+  }
+
+  .login-title {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+
+  .login-sub {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 36px;
+    max-width: 280px;
+  }
+
+  /* Setup steps */
+  .setup-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 16px;
+  }
+
+  .setup-card h2 {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 16px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+
+  .step:last-child { margin-bottom: 0; }
+
+  .step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--green-lt);
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .step-text { font-size: 14px; line-height: 1.5; color: var(--ink); }
+  .step-text a { color: var(--green); text-decoration: underline; }
+  .step-text code {
+    background: var(--sky);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--green-dk);
+  }
+
+  .field-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .field-row label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .field-row input {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: var(--sky);
+    color: var(--ink);
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+
+  .field-row input:focus { border-color: var(--green-md); }
+  .field-row input::placeholder { color: #aaa; }
+
+  .signin-btn {
+    width: 100%;
+    max-width: 400px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.15s;
+  }
+
+  .signin-btn:hover { background: var(--green-dk); }
+  .signin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .signin-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+  .privacy-note {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 14px;
+    max-width: 320px;
+  }
+
+  .err-msg {
+    color: #c0392b;
+    font-size: 13px;
+    margin-top: 10px;
+    max-width: 400px;
+    text-align: center;
+  }
+
+  /* ── Main app ── */
+  #app { display: none; }
+
+  .topbar {
+    background: var(--white);
+    border-bottom: 1.5px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topbar-paw { font-size: 20px; line-height: 1; }
+
+  .topbar-title {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--green);
+  }
+
+  .signout-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .signout-btn:hover { border-color: var(--green-md); }
+
+  .main { max-width: 560px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  /* Date nav */
+  .date-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .nav-btn {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--ink);
+    flex-shrink: 0;
+    transition: border-color 0.15s;
+    user-select: none;
+  }
+  .nav-btn:hover { border-color: var(--green-md); }
+
+  .date-center { flex: 1; text-align: center; }
+  .date-main { font-weight: 600; font-size: 17px; }
+  .date-sub { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .today-pill {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    background: none;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 0 12px;
+    height: 32px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+  }
+  .today-pill:hover { border-color: var(--green-md); color: var(--green); }
+
+  /* Chips */
+  .chips { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 20px; }
+
+  .chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+  }
+
+  .chip strong { font-weight: 500; }
+  .chip.r { background: var(--rover-lt); border-color: var(--rover-bd); color: var(--rover); }
+  .chip.d { background: var(--green-lt); border-color: #9ECDB4; color: var(--green); }
+
+  /* Section */
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .section-label::after { content:''; flex:1; height:1px; background: var(--border); }
+
+  .walk-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+
+  /* Walk card */
+  .walk-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 15px;
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .walk-card.done { background: #F4F4F4; border-color: #E0E0E0; }
+  .walk-card.done .dog-name,
+  .walk-card.done .client-line,
+  .walk-card.done .walk-time,
+  .walk-card.done .walk-dur { color: #BDBDBD; text-decoration: line-through; }
+  .walk-card.done .badge { opacity: 0.3; }
+
+  .chk input { display: none; }
+  .chk label {
+    width: 22px; height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .chk input:checked + label { background: var(--green-md); border-color: var(--green-md); }
+  .chk label::after {
+    content: ''; display: none;
+    width: 5px; height: 9px;
+    border: 2px solid #fff;
+    border-top: none; border-left: none;
+    transform: rotate(45deg) translate(-1px,-1px);
+  }
+  .chk input:checked + label::after { display: block; }
+
+  .card-body { min-width: 0; }
+  .top-row { display: flex; align-items: center; gap: 7px; }
+  .dog-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 6px; border-radius: 20px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .badge.rover  { background: var(--rover-lt); color: var(--rover); }
+  .badge.direct { background: var(--green-lt); color: var(--green); }
+
+  .client-line { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .walk-time { font-family: 'DM Mono', monospace; font-size: 13px; text-align: right; white-space: nowrap; }
+  .walk-dur  { font-size: 10px; color: var(--muted); text-align: right; margin-top: 2px; }
+
+  /* State boxes */
+  .state-box {
+    text-align: center; padding: 36px 20px;
+    color: var(--muted); font-size: 14px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .state-box .ico { font-size: 28px; margin-bottom: 10px; }
+
+  .spinner {
+    width: 22px; height: 22px;
+    border: 2.5px solid var(--border);
+    border-top-color: var(--green-md);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Add walk */
+  .add-toggle {
+    width: 100%; background: none;
+    border: 1.5px dashed var(--border);
+    border-radius: 12px; padding: 13px 16px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .add-toggle:hover { border-color: var(--green-md); color: var(--green); }
+  .plus { font-size: 20px; line-height: 1; color: var(--green-md); }
+
+  .add-form {
+    display: none; background: var(--white);
+    border: 1.5px solid var(--border); border-radius: 12px;
+    padding: 16px; margin-top: 8px;
+    flex-direction: column; gap: 12px;
+  }
+  .add-form.open { display: flex; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+  .field input, .field select {
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 8px 10px; background: var(--sky); color: var(--ink);
+    outline: none; transition: border-color 0.15s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--green-md); }
+  .form-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer; }
+  .btn-primary { background: var(--green); color: #fff; }
+  .btn-ghost { background: none; color: var(--muted); border: 1.5px solid var(--border); }
+
+  @media (max-width: 420px) { .form-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ─────────────────────────────── -->
+<div id="login-screen">
+  <div class="paw-mark">🐾</div>
+  <div class="login-title">Pawsific Daily Walks</div>
+  <div class="login-sub">Connect your Google Calendar to see every walk — Rover and direct — in one place.</div>
+
+  <div class="setup-card">
+    <h2>One-time setup</h2>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        Go to <a href="https://console.cloud.google.com/" target="_blank">console.cloud.google.com</a>, create a project, enable the <strong>Google Calendar API</strong>, then create an <strong>OAuth 2.0 Client ID</strong> for a <em>Web application</em>.
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        In the OAuth client settings, add <code>file://</code> (or the URL you open this file from) to <strong>Authorized JavaScript origins</strong>, and the same URL to <strong>Authorized redirect URIs</strong>.
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        Paste your Client ID below — it looks like <code>123456….apps.googleusercontent.com</code>. This is saved in your browser only.
+      </div>
+    </div>
+    <div class="field-row">
+      <label>Google OAuth Client ID</label>
+      <input type="text" id="client-id-input" placeholder="123456789-abc….apps.googleusercontent.com">
+    </div>
+  </div>
+
+  <button class="signin-btn" id="signin-btn" disabled>
+    <svg viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff" opacity=".9"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff" opacity=".9"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#fff" opacity=".9"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff" opacity=".9"/></svg>
+    Sign in with Google
+  </button>
+
+  <div class="err-msg" id="err-msg"></div>
+  <div class="privacy-note">Your calendar data never leaves your browser. The Client ID is stored locally on this device only.</div>
+</div>
+
+<!-- ── MAIN APP ──────────────────────────────────── -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-paw">🐾</span>
+      <span class="topbar-title">Pawsific Walks</span>
+    </div>
+    <button class="signout-btn" id="signout-btn">Sign out</button>
+  </div>
+
+  <div class="main">
+    <div class="date-nav">
+      <button class="nav-btn" id="prev">‹</button>
+      <div class="date-center">
+        <div class="date-main" id="date-main"></div>
+        <div class="date-sub"  id="date-sub"></div>
+      </div>
+      <button class="nav-btn" id="next">›</button>
+      <button class="today-pill" id="today-btn">Today</button>
+    </div>
+
+    <div class="chips" id="chips"></div>
+    <div id="content"></div>
+
+    <button class="add-toggle" id="add-toggle"><span class="plus">+</span> Add a walk manually</button>
+    <div class="add-form" id="add-form">
+      <div class="form-row">
+        <div class="field"><label>Dog name(s)</label><input id="f-dog" placeholder="Buddy"></div>
+        <div class="field"><label>Client</label><input id="f-client" placeholder="Sarah M."></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Time</label><input type="time" id="f-time"></div>
+        <div class="field"><label>Duration</label>
+          <select id="f-dur">
+            <option value="30">30 min</option>
+            <option value="60">1 hour</option>
+            <option value="20">20 min</option>
+            <option value="45">45 min</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Booked via</label>
+        <select id="f-src"><option value="direct">Direct</option><option value="rover">Rover</option></select>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" id="cancel-btn">Cancel</button>
+        <button class="btn btn-primary" id="save-btn">Add walk</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script>
+// ── Config ────────────────────────────────────────────────────
+const ROVER_CAL_ID = 'enb5b3grht65getmk8ubv90pb6el7v84@import.calendar.google.com';
+const WALKS_CAL_ID = 'a967c9b4c4d1dd4325c7d35e97d651ec7601ea3629c201f7dda1af41f2def96a@group.calendar.google.com';
+const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
+
+// ── State ─────────────────────────────────────────────────────
+let accessToken = null;
+let tokenExpiry  = 0;
+let clientId     = '';
+
+const TODAY_MS = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
+let curMs = TODAY_MS;
+
+const cache   = {};  // dateKey -> [{...}]
+const doneMap = {};  // id -> bool
+const manuals = {};  // dateKey -> [{...}]
+let uid = 9000;
+
+// ── Helpers ───────────────────────────────────────────────────
+function dateKey(ms) { return new Date(ms).toISOString().slice(0,10); }
+
+function fmtMain(ms) {
+  const diff = Math.round((ms - TODAY_MS) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  if (diff === -1) return 'Yesterday';
+  return new Date(ms).toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+}
+function fmtSub(ms) {
+  return new Date(ms).toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+}
+function fmt12(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const h = d.getHours(), m = d.getMinutes();
+  return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
+}
+function fmtDur(s, e) {
+  if (!s || !e) return '';
+  const mins = Math.round((new Date(e)-new Date(s))/60000);
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins/60), m = mins%60;
+  return m ? `${h}h ${m}m` : `${h}h`;
+}
+
+// Filter Rover events: keep only [B] timed events ≤ 120 min (walks & drop-ins)
+// [U] = unbooked inquiry, all-day = boarding/daycare blocks — both excluded
+function keepRoverEvent(ev) {
+  const summary = (ev.summary || '');
+  if (summary.startsWith('[U]')) return false;        // unbooked
+  if (ev.start && ev.start.date && !ev.start.dateTime) return false; // all-day = boarding/daycare
+  if (!ev.start || !ev.start.dateTime) return false;
+  const mins = (new Date(ev.end.dateTime) - new Date(ev.start.dateTime)) / 60000;
+  return mins <= 120;
+}
+
+function parseRoverTitle(summary) {
+  const stripped = summary.replace(/^\[[A-Z]\]\s*/, '').trim();
+  const slash = stripped.indexOf('/');
+  if (slash === -1) return { dog: stripped, client: '' };
+  return { dog: stripped.slice(0, slash).trim(), client: stripped.slice(slash+1).trim() };
+}
+
+// ── Google auth ───────────────────────────────────────────────
+function requestToken() {
+  return new Promise((resolve, reject) => {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: SCOPES,
+      callback: (resp) => {
+        if (resp.error) { reject(new Error(resp.error)); return; }
+        accessToken = resp.access_token;
+        tokenExpiry = Date.now() + (resp.expires_in - 60) * 1000;
+        resolve();
+      }
+    });
+    client.requestAccessToken({ prompt: 'consent' });
+  });
+}
+
+async function ensureToken() {
+  if (accessToken && Date.now() < tokenExpiry) return;
+  await requestToken();
+}
+
+// ── Calendar fetch ────────────────────────────────────────────
+async function fetchCalendar(calId, timeMin, timeMax) {
+  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`
+    + `?timeMin=${encodeURIComponent(timeMin)}`
+    + `&timeMax=${encodeURIComponent(timeMax)}`
+    + `&singleEvents=true&orderBy=startTime&maxResults=50`;
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+  if (!res.ok) throw new Error(`Calendar API ${res.status}`);
+  const data = await res.json();
+  return data.items || [];
+}
+
+async function loadDay(ms, force) {
+  const key = dateKey(ms);
+  if (!force && cache[key]) return;
+
+  showLoading();
+  try {
+    await ensureToken();
+
+    const dayStart = new Date(ms); dayStart.setHours(0,0,0,0);
+    const dayEnd   = new Date(ms); dayEnd.setHours(23,59,59,999);
+    const tMin = dayStart.toISOString();
+    const tMax = dayEnd.toISOString();
+
+    const [roverEvs, walksEvs] = await Promise.all([
+      fetchCalendar(ROVER_CAL_ID, tMin, tMax),
+      fetchCalendar(WALKS_CAL_ID, tMin, tMax)
+    ]);
+
+    const walks = [];
+
+    roverEvs.filter(keepRoverEvent).forEach(ev => {
+      const { dog, client } = parseRoverTitle(ev.summary || '');
+      walks.push({
+        id: uid++,
+        dog, client,
+        timeISO: ev.start.dateTime,
+        endISO:  ev.end.dateTime,
+        source: 'rover'
+      });
+    });
+
+    walksEvs.filter(ev => ev.start && ev.start.dateTime).forEach(ev => {
+      // Title may be "Fiona - Walk" or just "Fiona"
+      const dog = (ev.summary || '').replace(/\s*[-–]\s*(walk|drop.?in|daycare|boarding).*/i, '').trim();
+      walks.push({
+        id: uid++,
+        dog: dog || ev.summary,
+        client: '',
+        timeISO: ev.start.dateTime,
+        endISO:  ev.end.dateTime,
+        source: 'direct'
+      });
+    });
+
+    cache[key] = walks;
+  } catch(e) {
+    cache[key] = null;
+    showError(e.message);
+    return;
+  }
+  render();
+}
+
+// ── Render ────────────────────────────────────────────────────
+function showLoading() {
+  document.getElementById('chips').innerHTML = '';
+  document.getElementById('content').innerHTML =
+    `<div class="state-box"><div class="spinner"></div>Loading walks…</div>`;
+}
+function showError(msg) {
+  document.getElementById('content').innerHTML =
+    `<div class="state-box"><div class="ico">⚠️</div>Couldn't load calendar.<br><small style="font-size:11px;opacity:.7">${msg}</small></div>`;
+}
+
+function getAllWalks(ms) {
+  const key = dateKey(ms);
+  const base  = (cache[key] || []).map(w => ({...w, done: !!doneMap[w.id]}));
+  const extra = (manuals[key] || []).map(w => ({...w, done: !!doneMap[w.id]}));
+  return [...base, ...extra].sort((a,b) => (a.timeISO||'').localeCompare(b.timeISO||''));
+}
+
+function cardHTML(w) {
+  const dur = fmtDur(w.timeISO, w.endISO);
+  return `
+    <div class="walk-card ${w.done?'done':''}">
+      <div class="chk">
+        <input type="checkbox" id="chk-${w.id}" ${w.done?'checked':''}>
+        <label for="chk-${w.id}"></label>
+      </div>
+      <div class="card-body">
+        <div class="top-row">
+          <span class="dog-name">${w.dog}</span>
+          <span class="badge ${w.source}">${w.source==='rover'?'Rover':'Direct'}</span>
+        </div>
+        ${w.client?`<div class="client-line">${w.client}</div>`:''}
+      </div>
+      <div>
+        <div class="walk-time">${fmt12(w.timeISO)}</div>
+        ${dur?`<div class="walk-dur">${dur}</div>`:''}
+      </div>
+    </div>`;
+}
+
+function render() {
+  // Header
+  const diff = Math.round((curMs - TODAY_MS) / 86400000);
+  document.getElementById('date-main').textContent = fmtMain(curMs);
+  document.getElementById('date-sub').textContent  =
+    (Math.abs(diff) <= 1) ? fmtSub(curMs) : '';
+  document.getElementById('today-btn').style.visibility = diff===0 ? 'hidden' : '';
+
+  const key   = dateKey(curMs);
+  const walks = getAllWalks(curMs);
+  const chips = document.getElementById('chips');
+  const content = document.getElementById('content');
+
+  // If cache[key] is explicitly null, error was shown already
+  if (cache[key] === null) return;
+
+  // Chips
+  if (walks.length) {
+    const r = walks.filter(w=>w.source==='rover').length;
+    const d = walks.filter(w=>w.source==='direct').length;
+    const done = walks.filter(w=>w.done).length;
+    chips.innerHTML = `
+      <span class="chip"><strong>${walks.length}</strong> walk${walks.length!==1?'s':''}</span>
+      ${r?`<span class="chip r"><strong>${r}</strong> Rover</span>`:''}
+      ${d?`<span class="chip d"><strong>${d}</strong> Direct</span>`:''}
+      <span class="chip"><strong>${done}/${walks.length}</strong> done</span>`;
+  } else {
+    chips.innerHTML = '';
+  }
+
+  if (!walks.length) {
+    content.innerHTML = `<div class="state-box"><div class="ico">🌿</div>No walks scheduled.</div>`;
+    return;
+  }
+
+  const upcoming = walks.filter(w=>!w.done);
+  const done     = walks.filter(w=> w.done);
+  let html = '';
+  if (upcoming.length) html += `<div class="section-label">Upcoming</div><div class="walk-list">${upcoming.map(cardHTML).join('')}</div>`;
+  if (done.length)     html += `<div class="section-label">Completed</div><div class="walk-list">${done.map(cardHTML).join('')}</div>`;
+  content.innerHTML = html;
+
+  walks.forEach(w => {
+    const chk = document.getElementById(`chk-${w.id}`);
+    if (chk) chk.addEventListener('change', () => { doneMap[w.id] = chk.checked; render(); });
+  });
+}
+
+async function gotoDay(ms) {
+  curMs = ms;
+  render(); // show header update immediately
+  await loadDay(ms);
+}
+
+// ── Setup / login ─────────────────────────────────────────────
+const clientIdInput = document.getElementById('client-id-input');
+const signinBtn     = document.getElementById('signin-btn');
+const errMsg        = document.getElementById('err-msg');
+
+// Restore saved client ID
+const saved = localStorage.getItem('pawsific_client_id');
+if (saved) { clientIdInput.value = saved; signinBtn.disabled = false; }
+
+clientIdInput.addEventListener('input', () => {
+  signinBtn.disabled = clientIdInput.value.trim().length < 10;
+});
+
+signinBtn.addEventListener('click', async () => {
+  clientId = clientIdInput.value.trim();
+  localStorage.setItem('pawsific_client_id', clientId);
+  errMsg.textContent = '';
+  signinBtn.disabled = true;
+  signinBtn.textContent = 'Signing in…';
+  try {
+    await requestToken();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    await loadDay(curMs);
+  } catch(e) {
+    errMsg.textContent = `Sign-in failed: ${e.message}. Check your Client ID and make sure popups are allowed.`;
+    signinBtn.disabled = false;
+    signinBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#fff" opacity=".9"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff" opacity=".9"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#fff" opacity=".9"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff" opacity=".9"/></svg> Sign in with Google`;
+  }
+});
+
+document.getElementById('signout-btn').addEventListener('click', () => {
+  accessToken = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+});
+
+// ── Nav ───────────────────────────────────────────────────────
+document.getElementById('prev').addEventListener('click', () => gotoDay(curMs - 86400000));
+document.getElementById('next').addEventListener('click', () => gotoDay(curMs + 86400000));
+document.getElementById('today-btn').addEventListener('click', () => gotoDay(TODAY_MS));
+
+// ── Add walk manually ─────────────────────────────────────────
+const addToggle = document.getElementById('add-toggle');
+const addForm   = document.getElementById('add-form');
+addToggle.addEventListener('click', () => { addForm.classList.add('open'); addToggle.style.display='none'; });
+document.getElementById('cancel-btn').addEventListener('click', () => { addForm.classList.remove('open'); addToggle.style.display=''; });
+document.getElementById('save-btn').addEventListener('click', () => {
+  const dog    = document.getElementById('f-dog').value.trim();
+  const client = document.getElementById('f-client').value.trim();
+  const time   = document.getElementById('f-time').value;
+  const dur    = parseInt(document.getElementById('f-dur').value);
+  const src    = document.getElementById('f-src').value;
+  if (!dog) { document.getElementById('f-dog').focus(); return; }
+  const key = dateKey(curMs);
+  if (!manuals[key]) manuals[key] = [];
+  let timeISO = '', endISO = '';
+  if (time) {
+    const [h,m] = time.split(':');
+    const s = new Date(curMs); s.setHours(+h,+m,0,0);
+    const e = new Date(s.getTime() + dur*60000);
+    timeISO = s.toISOString(); endISO = e.toISOString();
+  }
+  const id = uid++;
+  manuals[key].push({ id, dog, client, timeISO, endISO, source: src });
+  document.getElementById('f-dog').value = '';
+  document.getElementById('f-client').value = '';
+  document.getElementById('f-time').value = '';
+  addForm.classList.remove('open'); addToggle.style.display='';
+  render();
+});
+</script>
+</body>
+</html>
